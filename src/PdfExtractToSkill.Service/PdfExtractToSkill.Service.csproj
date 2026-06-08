@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-PdfExtractToSkill.Service-3b3cd393-2763-4463-af52-79b68617af06</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PdfExtractToSkill.Application\PdfExtractToSkill.Application.csproj" />
+    <ProjectReference Include="..\PdfExtractToSkill.Infrastructure\PdfExtractToSkill.Infrastructure.csproj" />
+    <ProjectReference Include="..\PdfExtractToSkill.Contracts\PdfExtractToSkill.Contracts.csproj" />
+  </ItemGroup>
+</Project>

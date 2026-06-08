@@ -109,7 +109,8 @@ def extract_page_markdown(page: fitz.Page) -> str:
 
     # --- text ---
     dict_data = page.get_text("dict", sort=True)
-    body_size = median(_collect_body_sizes(dict_data)) if _collect_body_sizes(dict_data) else 10.0
+    sizes = _collect_body_sizes(dict_data)
+    body_size = median(sizes) if sizes else 10.0
 
     text_items = []  # (y0, rendered_str)
     for block in dict_data["blocks"]:
@@ -148,7 +149,9 @@ def extract_page_markdown(page: fitz.Page) -> str:
     parts = []
     for _, kind, content in all_items:
         if kind == "table":
-            parts.extend(["", content, ""])
+            parts.append("")
+            parts.append(content)
+            parts.append("")
         else:
             parts.append(content)
 
@@ -174,19 +177,16 @@ def extract(pdf_path: Path, output_dir: Path, skill_name: str, skill_description
     output_dir.mkdir(parents=True, exist_ok=True)
     out_file = output_dir / f"{pdf_path.stem}.md"
 
-    doc = fitz.open(str(pdf_path))
-    try:
+    with fitz.open(str(pdf_path)) as doc:
         page_count = doc.page_count
         parts = [build_frontmatter(skill_name, skill_description, pdf_path.name)]
 
         for page_num, page in enumerate(doc, start=1):
             parts.append(f"\n---\n\n<!-- Page {page_num} of {page_count} -->\n")
             parts.append(extract_page_markdown(page))
-    finally:
-        doc.close()
 
-    out_file.write_text("\n".join(parts), encoding="utf-8")
-    print(f"Written: {out_file}")
+        out_file.write_text("\n".join(parts), encoding="utf-8")
+
     return out_file
 
 
@@ -220,14 +220,16 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if not args.pdf.exists():
-        print(f"error: PDF not found: {args.pdf}", file=sys.stderr)
-        sys.exit(1)
     if args.pdf.suffix.lower() != ".pdf":
         print(f"error: not a .pdf file: {args.pdf}", file=sys.stderr)
         sys.exit(1)
+    if not args.pdf.exists():
+        print(f"error: PDF not found: {args.pdf}", file=sys.stderr)
+        sys.exit(1)
 
-    extract(args.pdf, args.output_dir, args.skill_name, args.skill_description)
+    out = extract(args.pdf, args.output_dir, args.skill_name, args.skill_description)
+    # ExtractionOrchestrator parses this line to locate the output file — keep format stable.
+    print(f"Written: {out}")
 
 
 if __name__ == "__main__":
