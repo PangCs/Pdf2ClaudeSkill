@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  SOLUTION: PdfExtractToSkill.sln
+  BUILD_CONFIG: Release
+
+jobs:
+  # ─── Unit Tests ────────────────────────────────────────────────────────────
+  unit-test:
+    name: Unit Tests
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} --no-restore --configuration ${{ env.BUILD_CONFIG }}
+
+      - name: Unit tests
+        run: >
+          dotnet test ${{ env.SOLUTION }}
+          --no-build
+          --configuration ${{ env.BUILD_CONFIG }}
+          --filter "Category!=Integration"
+          --logger "trx;LogFileName=unit-results.trx"
+          --results-directory TestResults
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Test Results
+          path: TestResults/unit-results.trx
+          reporter: dotnet-trx
+
+  # ─── Integration / Regression Tests ────────────────────────────────────────
+  integration-test:
+    name: Integration Tests
+    runs-on: windows-latest
+    needs: unit-test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PyMuPDF
+        run: pip install pymupdf
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION }} --no-restore --configuration ${{ env.BUILD_CONFIG }}
+
+      - name: Integration tests
+        run: >
+          dotnet test ${{ env.SOLUTION }}
+          --no-build
+          --configuration ${{ env.BUILD_CONFIG }}
+          --filter "Category=Integration"
+          --logger "trx;LogFileName=integration-results.trx"
+          --results-directory TestResults
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Integration Test Results
+          path: TestResults/integration-results.trx
+          reporter: dotnet-trx
+
+  # ─── MSIX Installer ────────────────────────────────────────────────────────
+  build-installer:
+    name: Build Installer (MSIX)
+    runs-on: windows-latest
+    needs: [unit-test, integration-test]
+    # Only produce the installer on pushes to main (not on PRs)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      - name: Build MSIX packaging project
+        run: >
+          msbuild src/PdfExtractToSkill.Packaging/PdfExtractToSkill.Packaging.wapproj
+          /p:Configuration=${{ env.BUILD_CONFIG }}
+          /p:Platform=x64
+          /p:AppxBundlePlatforms=x64
+          /p:AppxBundle=Never
+          /p:UapAppxPackageBuildMode=SideloadOnly
+          /p:AppxPackageSigningEnabled=false
+
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PdfExtractToSkill-installer
+          path: src/PdfExtractToSkill.Packaging/AppPackages/**/*.msix
+          if-no-files-found: error
+          retention-days: 30
