@@ -115,21 +115,12 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v2
-
       - name: Restore
         run: dotnet restore ${{ env.SOLUTION }}
 
-      - name: Build MSIX packaging project
-        run: >
-          msbuild src/PdfExtractToSkill.Packaging/PdfExtractToSkill.Packaging.wapproj
-          /p:Configuration=${{ env.BUILD_CONFIG }}
-          /p:Platform=x64
-          /p:AppxBundlePlatforms=x64
-          /p:AppxBundle=Never
-          /p:UapAppxPackageBuildMode=SideloadOnly
-          /p:AppxPackageSigningEnabled=false
+      - name: Build MSIX
+        shell: pwsh
+        run: .\build-msix.ps1 -Configuration ${{ env.BUILD_CONFIG }}
 
       - name: Upload MSIX artifact
         uses: actions/upload-artifact@v4

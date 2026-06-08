@@ -16,6 +16,9 @@ obj/
 .vs/
 *.swp
 
+# MSIX packaging output
+AppPackages/
+
 # Claude Code
 .claude/
 
