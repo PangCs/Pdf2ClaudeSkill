@@ -6,6 +6,7 @@ using PdfExtractToSkill.Application;
 using PdfExtractToSkill.Application.Interfaces;
 using PdfExtractToSkill.Infrastructure.Config;
 using PdfExtractToSkill.Infrastructure.Notifications;
+
 using PdfExtractToSkill.Infrastructure.Orchestration;
 using PdfExtractToSkill.Infrastructure.Python;
 using PdfExtractToSkill.Infrastructure.Shell;
@@ -96,6 +97,7 @@ public partial class App : System.Windows.Application
         sc.AddSingleton<IFolderWatcherService, FolderWatcherService>();
         sc.AddSingleton<INotificationService, NotificationService>();
         sc.AddSingleton<IExtractionOrchestrator, ExtractionOrchestrator>();
+        sc.AddSingleton<IUninstallHelper, UninstallHelper>();
         return sc.BuildServiceProvider();
     }
 
@@ -103,6 +105,8 @@ public partial class App : System.Windows.Application
     {
         var menu = new System.Windows.Forms.ContextMenuStrip();
         menu.Items.Add("Open Settings", null, OnOpenSettings);
+        menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+        menu.Items.Add("Prepare to Uninstall…", null, OnPrepareUninstall);
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => Shutdown());
 
@@ -130,6 +134,13 @@ public partial class App : System.Windows.Application
             _services!.GetRequiredService<IStartupRegistrar>(),
             _services!.GetRequiredService<IPrerequisiteChecker>());
         new Views.SettingsDialog(vm).ShowDialog();
+    }
+
+    private void OnPrepareUninstall(object? sender, EventArgs e)
+    {
+        var vm = new ViewModels.UninstallCleanupViewModel(
+            _services!.GetRequiredService<IUninstallHelper>());
+        new Views.UninstallCleanupDialog(vm).ShowDialog();
     }
 
     private void RunPostUpgradeCheck(string newVersion)
