@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PdfExtractToSkill.Application.Interfaces;
 using PdfExtractToSkill.Infrastructure.Config;
 using PdfExtractToSkill.Infrastructure.Python;
+using PdfExtractToSkill.Infrastructure.Shell;
 using PdfExtractToSkill.Infrastructure.Skill;
 using PdfExtractToSkill.Infrastructure.Watcher;
 
@@ -13,10 +14,24 @@ public partial class App : System.Windows.Application
 {
     private ServiceProvider? _services;
     private System.Windows.Forms.NotifyIcon? _trayIcon;
+    private SingleInstanceGuard? _instanceGuard;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        _instanceGuard = new SingleInstanceGuard();
+        if (!_instanceGuard.IsOwner)
+        {
+            var args = string.Join(" ", e.Args);
+            if (!string.IsNullOrEmpty(args))
+                _instanceGuard.ForwardActivation(args);
+            _instanceGuard.Dispose();
+            Shutdown();
+            return;
+        }
+
+        _instanceGuard.Activated += OnUriActivated;
         _services = BuildServices();
         _trayIcon = CreateTrayIcon();
         StartWatcher();
@@ -27,6 +42,7 @@ public partial class App : System.Windows.Application
         _services?.GetService<IFolderWatcherService>()?.Stop();
         _trayIcon?.Dispose();
         _services?.Dispose();
+        _instanceGuard?.Dispose();
         base.OnExit(e);
     }
 
@@ -71,5 +87,11 @@ public partial class App : System.Windows.Application
     private void OnOpenSettings(object? sender, EventArgs e)
     {
         // TODO (U2): open SettingsWindow
+    }
+
+    private void OnUriActivated(object? sender, string uri)
+    {
+        // TODO (N1): route pdfextracttoskill:// URI actions to the appropriate handler
+        Dispatcher.Invoke(() => { /* dispatch to handler based on uri */ });
     }
 }
