@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\PdfExtractToSkill.Infrastructure\PdfExtractToSkill.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\PdfExtractToSkill.Application\PdfExtractToSkill.Application.csproj" />
+    <ProjectReference Include="..\..\src\PdfExtractToSkill\PdfExtractToSkill.csproj" />
   </ItemGroup>
 
 </Project>

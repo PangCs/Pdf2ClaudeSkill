@@ -4,6 +4,6 @@
              xmlns:local="clr-namespace:PdfExtractToSkill"
              ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
-         
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
     </Application.Resources>
 </Application>
