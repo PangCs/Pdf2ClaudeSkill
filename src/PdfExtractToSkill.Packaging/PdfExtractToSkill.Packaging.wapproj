@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- ── Globals ─────────────────────────────────────────────────────────── -->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <ProjectGuid>{A9F4C3B2-8E1D-4F5A-B6C7-2D3E4F5A6B7C}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectTypeGuids>{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}</ProjectTypeGuids>
+    <DesktopBridgeType>Desktop Bridge</DesktopBridgeType>
+    <!-- Entry point: the WPF application project -->
+    <EntryPointProjectUniqueName>..\PdfExtractToSkill\PdfExtractToSkill.csproj</EntryPointProjectUniqueName>
+    <!-- Signing disabled — CI produces unsigned packages for sideload -->
+    <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+    <!-- Match the TargetDeviceFamily version range in Package.appxmanifest -->
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion>10.0.26100.0</TargetPlatformVersion>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <!-- ── Release/x64 (CI default) ──────────────────────────────────────── -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <AppxBundle>Never</AppxBundle>
+    <UapAppxPackageBuildMode>SideloadOnly</UapAppxPackageBuildMode>
+  </PropertyGroup>
+
+  <!-- ── Debug/x64 ─────────────────────────────────────────────────────── -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <AppxBundle>Never</AppxBundle>
+    <UapAppxPackageBuildMode>SideloadOnly</UapAppxPackageBuildMode>
+  </PropertyGroup>
+
+  <!-- ── Manifest ──────────────────────────────────────────────────────── -->
+  <ItemGroup>
+    <AppxManifest Include="Package.appxmanifest">
+      <SubType>Designer</SubType>
+    </AppxManifest>
+  </ItemGroup>
+
+  <!-- ── Brand assets ───────────────────────────────────────────────────── -->
+  <ItemGroup>
+    <Content Include="Assets\Square44x44Logo.scale-200.png" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+    <Content Include="Assets\Square310x310Logo.scale-200.png" />
+    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+  </ItemGroup>
+
+  <!-- ── Bundle extract.py alongside the executable ────────────────────── -->
+  <ItemGroup>
+    <Content Include="..\..\extract.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>extract.py</Link>
+    </Content>
+  </ItemGroup>
+
+  <!-- ── WPF application reference ─────────────────────────────────────── -->
+  <ItemGroup>
+    <ProjectReference Include="..\PdfExtractToSkill\PdfExtractToSkill.csproj">
+      <SkipGetTargetFrameworkProperties>True</SkipGetTargetFrameworkProperties>
+    </ProjectReference>
+  </ItemGroup>
+
+  <!-- ── Fallback: derive WapProjPath from VSINSTALLDIR when not pre-set ── -->
+  <PropertyGroup Condition="'$(WapProjPath)' == '' and '$(VSINSTALLDIR)' != ''">
+    <WapProjPath>$(VSINSTALLDIR)MSBuild\Microsoft\DesktopBridge\</WapProjPath>
+  </PropertyGroup>
+  <Import Project="$(WapProjPath)\Microsoft.DesktopBridge.targets" />
+
+</Project>
