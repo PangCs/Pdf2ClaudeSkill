@@ -90,7 +90,11 @@ public partial class App : System.Windows.Application
 
     private void OnOpenSettings(object? sender, EventArgs e)
     {
-        // TODO (U2): open SettingsWindow
+        var vm = new ViewModels.SettingsViewModel(
+            _services!.GetRequiredService<IAppConfigRepository>(),
+            _services!.GetRequiredService<IStartupRegistrar>(),
+            _services!.GetRequiredService<IPrerequisiteChecker>());
+        new Views.SettingsDialog(vm).ShowDialog();
     }
 
     private void OnUriActivated(object? sender, string uri)
