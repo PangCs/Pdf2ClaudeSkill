@@ -6,7 +6,6 @@
     <Project Path="src/PdfExtractToSkill.Infrastructure/PdfExtractToSkill.Infrastructure.csproj" />
     <Project Path="src/PdfExtractToSkill.Service/PdfExtractToSkill.Service.csproj" />
     <Project Path="src/PdfExtractToSkill/PdfExtractToSkill.csproj" />
-    <Project Path="src/PdfExtractToSkill.Packaging/PdfExtractToSkill.Packaging.wapproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PdfExtractToSkill.Domain.Tests/PdfExtractToSkill.Domain.Tests.csproj" />
