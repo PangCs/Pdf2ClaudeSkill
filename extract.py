@@ -109,7 +109,8 @@ def extract_page_markdown(page: fitz.Page) -> str:
 
     # --- text ---
     dict_data = page.get_text("dict", sort=True)
-    body_size = median(_collect_body_sizes(dict_data)) if _collect_body_sizes(dict_data) else 10.0
+    sizes = _collect_body_sizes(dict_data)
+    body_size = median(sizes) if sizes else 10.0
 
     text_items = []  # (y0, rendered_str)
     for block in dict_data["blocks"]:
@@ -148,7 +149,9 @@ def extract_page_markdown(page: fitz.Page) -> str:
     parts = []
     for _, kind, content in all_items:
         if kind == "table":
-            parts.extend(["", content, ""])
+            parts.append("")
+            parts.append(content)
+            parts.append("")
         else:
             parts.append(content)
 
@@ -186,7 +189,6 @@ def extract(pdf_path: Path, output_dir: Path, skill_name: str, skill_description
         doc.close()
 
     out_file.write_text("\n".join(parts), encoding="utf-8")
-    print(f"Written: {out_file}")
     return out_file
 
 
@@ -227,7 +229,8 @@ def main() -> None:
         print(f"error: not a .pdf file: {args.pdf}", file=sys.stderr)
         sys.exit(1)
 
-    extract(args.pdf, args.output_dir, args.skill_name, args.skill_description)
+    out = extract(args.pdf, args.output_dir, args.skill_name, args.skill_description)
+    print(f"Written: {out}")
 
 
 if __name__ == "__main__":
