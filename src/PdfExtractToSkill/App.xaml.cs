@@ -56,7 +56,7 @@ public partial class App : System.Windows.Application
         sc.AddSingleton<IPrerequisiteChecker, PrerequisiteChecker>();
         sc.AddSingleton<ISkillNameDeriver, SkillNameDeriver>();
         sc.AddSingleton<ISkillInstaller, SkillInstaller>();
-        sc.AddSingleton<IFolderWatcherService, NullFolderWatcherService>();
+        sc.AddSingleton<IFolderWatcherService, FolderWatcherService>();
         return sc.BuildServiceProvider();
     }
 
