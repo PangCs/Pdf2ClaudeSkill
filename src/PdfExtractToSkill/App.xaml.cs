@@ -35,6 +35,22 @@ public partial class App : System.Windows.Application
 
         _instanceGuard.Activated += OnUriActivated;
         _services = BuildServices();
+
+        var config = _services.GetRequiredService<IAppConfigRepository>().Load();
+        var needsFirstRun = e.Args.Contains("--first-run") || string.IsNullOrEmpty(config.WatchedRootPath);
+        if (needsFirstRun)
+        {
+            var vm = new ViewModels.FirstRunWizardViewModel(
+                _services.GetRequiredService<IAppConfigRepository>(),
+                _services.GetRequiredService<IPrerequisiteChecker>());
+            var wizard = new Views.FirstRunWizard(vm);
+            if (wizard.ShowDialog() != true)
+            {
+                Shutdown();
+                return;
+            }
+        }
+
         _trayIcon = CreateTrayIcon();
         StartWatcher();
     }
