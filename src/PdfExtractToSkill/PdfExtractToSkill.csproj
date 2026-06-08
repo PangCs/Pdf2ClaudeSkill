@@ -3,6 +3,12 @@
   <ItemGroup>
     <ProjectReference Include="..\PdfExtractToSkill.Application\PdfExtractToSkill.Application.csproj" />
     <ProjectReference Include="..\PdfExtractToSkill.Contracts\PdfExtractToSkill.Contracts.csproj" />
+    <ProjectReference Include="..\PdfExtractToSkill.Infrastructure\PdfExtractToSkill.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -11,6 +17,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 
 </Project>
