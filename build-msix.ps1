@@ -15,8 +15,13 @@
     .\build-msix.ps1 -Configuration Debug
 #>
 param(
-    [string]$Configuration = "Release",
-    [string]$Platform      = "x64"
+    [string]$Configuration    = "Release",
+    [string]$Platform         = "x64",
+    # Path to the .pfx used to sign the MSIX. Defaults to PdfExtractToSkill.pfx
+    # next to this script. Set to $null or use -SkipSigning to skip.
+    [string]$CertificatePath  = "$PSScriptRoot\PdfExtractToSkill.pfx",
+    [string]$CertificatePassword = "",
+    [switch]$SkipSigning
 )
 
 Set-StrictMode -Version Latest
@@ -98,3 +103,23 @@ New-Item -ItemType Directory -Force -Path $msixDir | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "makeappx pack failed" }
 
 Write-Host "`n==> MSIX created: $msixOut"
+
+# ── 5. Sign MSIX ──────────────────────────────────────────────────────────────
+if (-not $SkipSigning) {
+    if (-not (Test-Path $CertificatePath)) {
+        Write-Warning "Certificate not found at '$CertificatePath' — package is unsigned. Place your PFX there or pass -CertificatePath."
+    } else {
+        $signtool = "$sdkBin\signtool.exe"
+        if (-not (Test-Path $signtool)) { throw "signtool.exe not found at: $signtool" }
+
+        Write-Host "`n==> Signing MSIX..."
+        $signArgs = @("sign", "/fd", "SHA256", "/a", "/f", $CertificatePath)
+        if ($CertificatePassword) { $signArgs += "/p", $CertificatePassword }
+        $signArgs += $msixOut
+
+        & $signtool @signArgs
+        if ($LASTEXITCODE -ne 0) { throw "signtool failed (exit $LASTEXITCODE)" }
+
+        Write-Host "==> Signed: $msixOut"
+    }
+}
