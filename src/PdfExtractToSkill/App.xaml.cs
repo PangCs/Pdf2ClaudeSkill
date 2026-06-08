@@ -3,6 +3,8 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using PdfExtractToSkill.Application.Interfaces;
 using PdfExtractToSkill.Infrastructure.Config;
+using PdfExtractToSkill.Infrastructure.Notifications;
+using PdfExtractToSkill.Infrastructure.Orchestration;
 using PdfExtractToSkill.Infrastructure.Python;
 using PdfExtractToSkill.Infrastructure.Shell;
 using PdfExtractToSkill.Infrastructure.Skill;
@@ -57,6 +59,8 @@ public partial class App : System.Windows.Application
         sc.AddSingleton<ISkillNameDeriver, SkillNameDeriver>();
         sc.AddSingleton<ISkillInstaller, SkillInstaller>();
         sc.AddSingleton<IFolderWatcherService, FolderWatcherService>();
+        sc.AddSingleton<INotificationService, NotificationService>();
+        sc.AddSingleton<IExtractionOrchestrator, ExtractionOrchestrator>();
         return sc.BuildServiceProvider();
     }
 
