@@ -62,9 +62,11 @@ public class PythonDetectorTests
         const string dir2 = @"C:\Python\new";
         var detector = new PythonDetector(
             [dir1, dir2],
-            path => path.StartsWith(dir1) || path.StartsWith(dir2));
+            path => path == Exe(dir1, "py") || path == Exe(dir2, "py"));
 
-        Assert.StartsWith(dir1, detector.TryDetect());
+        var result = detector.TryDetect();
+        Assert.NotNull(result);
+        Assert.Equal(Exe(dir1, "py"), result);
     }
 
     [Fact]
@@ -93,6 +95,7 @@ public class PythonDetectorTests
     }
 
     [Fact]
+    [Trait("Category", "Integration")]
     public void TryDetect_Integration_FindsPythonInCurrentEnvironment()
     {
         var result = new PythonDetector().TryDetect();

@@ -6,7 +6,7 @@ public sealed class PythonDetector : IPythonDetector
 {
     private static readonly string[] Candidates = ["py", "python", "python3"];
 
-    private readonly IEnumerable<string> _pathDirs;
+    private readonly string[] _pathDirs;
     private readonly Func<string, bool> _fileExists;
 
     public PythonDetector()
@@ -15,7 +15,7 @@ public sealed class PythonDetector : IPythonDetector
             File.Exists)
     { }
 
-    internal PythonDetector(IEnumerable<string> pathDirs, Func<string, bool> fileExists)
+    internal PythonDetector(string[] pathDirs, Func<string, bool> fileExists)
     {
         _pathDirs = pathDirs;
         _fileExists = fileExists;

@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 env:
-  DOTNET_VERSION: '9.0.x'
-  SOLUTION: PdfExtractToSkill.sln
+  DOTNET_VERSION: '10.0.x'
+  SOLUTION: PdfExtractToSkill.slnx
   BUILD_CONFIG: Release
 
 jobs:
@@ -75,6 +75,9 @@ jobs:
 
       - name: Build
         run: dotnet build ${{ env.SOLUTION }} --no-restore --configuration ${{ env.BUILD_CONFIG }}
+
+      - name: Python tests (pytest)
+        run: pytest tests/test_extract.py -v
 
       - name: Integration tests
         run: >
