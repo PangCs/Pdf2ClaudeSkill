@@ -1,6 +1,8 @@
 using System.Drawing;
+using System.Reflection;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using PdfExtractToSkill.Application;
 using PdfExtractToSkill.Application.Interfaces;
 using PdfExtractToSkill.Infrastructure.Config;
 using PdfExtractToSkill.Infrastructure.Notifications;
@@ -36,7 +38,11 @@ public partial class App : System.Windows.Application
         _instanceGuard.Activated += OnUriActivated;
         _services = BuildServices();
 
-        var config = _services.GetRequiredService<IAppConfigRepository>().Load();
+        var repo = _services.GetRequiredService<IAppConfigRepository>();
+        var config = repo.Load();
+        var currentVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";
+        var installState = InstallStateDetector.Detect(config.LastKnownVersion, currentVersion);
+
         var needsFirstRun = e.Args.Contains("--first-run") || string.IsNullOrEmpty(config.WatchedRootPath);
         if (needsFirstRun)
         {
@@ -49,7 +55,20 @@ public partial class App : System.Windows.Application
                 Shutdown();
                 return;
             }
+            // Refresh config after wizard saves it
+            config = repo.Load();
+            installState = InstallState.Current;
         }
+
+        // Save current version so next launch can detect upgrades
+        if (installState != InstallState.Current)
+        {
+            config.LastKnownVersion = currentVersion;
+            repo.Save(config);
+        }
+
+        if (installState == InstallState.Upgrade)
+            RunPostUpgradeCheck(currentVersion);
 
         _trayIcon = CreateTrayIcon();
         StartWatcher();
@@ -111,6 +130,23 @@ public partial class App : System.Windows.Application
             _services!.GetRequiredService<IStartupRegistrar>(),
             _services!.GetRequiredService<IPrerequisiteChecker>());
         new Views.SettingsDialog(vm).ShowDialog();
+    }
+
+    private void RunPostUpgradeCheck(string newVersion)
+    {
+        var prereqs = _services!.GetRequiredService<IPrerequisiteChecker>();
+        var notifications = _services!.GetRequiredService<INotificationService>();
+        Task.Run(() =>
+        {
+            var report = prereqs.CheckAll();
+            Dispatcher.Invoke(() =>
+            {
+                if (!report.PythonFound)
+                    notifications.ShowPythonMissing();
+                else
+                    notifications.ShowUpgraded(newVersion);
+            });
+        });
     }
 
     private void OnUriActivated(object? sender, string uri)

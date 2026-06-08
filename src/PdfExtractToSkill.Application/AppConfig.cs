@@ -6,4 +6,5 @@ public sealed class AppConfig
     public string OutputPath { get; set; } = string.Empty;
     public string? PythonExePath { get; set; }
     public bool AutostartEnabled { get; set; }
+    public string? LastKnownVersion { get; set; }
 }
