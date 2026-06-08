@@ -68,10 +68,13 @@ public sealed partial class FirstRunWizardViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanFinish))]
     private void Finish()
     {
+        var version = System.Reflection.Assembly.GetExecutingAssembly()
+            .GetName().Version?.ToString(3) ?? "1.0.0";
         _repo.Save(new AppConfig
         {
             WatchedRootPath = WatchedRootPath,
             OutputPath = OutputPath,
+            LastKnownVersion = version,
         });
         Completed?.Invoke(this, EventArgs.Empty);
     }

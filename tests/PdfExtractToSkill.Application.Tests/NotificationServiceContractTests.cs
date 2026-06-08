@@ -16,6 +16,12 @@ public class NotificationServiceContractTests
 
         public void ShowError(string message) =>
             Calls.Add(("ShowError", message, null));
+
+        public void ShowUpgraded(string newVersion) =>
+            Calls.Add(("ShowUpgraded", newVersion, null));
+
+        public void ShowPythonMissing() =>
+            Calls.Add(("ShowPythonMissing", string.Empty, null));
     }
 
     [Fact]
