@@ -107,7 +107,7 @@ Write-Host "`n==> MSIX created: $msixOut"
 # ── 5. Sign MSIX ──────────────────────────────────────────────────────────────
 if (-not $SkipSigning) {
     if (-not (Test-Path $CertificatePath)) {
-        Write-Warning "Certificate not found at '$CertificatePath' — package is unsigned. Place your PFX there or pass -CertificatePath."
+        Write-Warning "Certificate not found at '$CertificatePath' -- package is unsigned. Place your PFX there or pass -CertificatePath."
     } else {
         $signtool = "$sdkBin\signtool.exe"
         if (-not (Test-Path $signtool)) { throw "signtool.exe not found at: $signtool" }
