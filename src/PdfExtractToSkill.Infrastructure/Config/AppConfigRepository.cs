@@ -13,6 +13,7 @@ public sealed class AppConfigRepository : IAppConfigRepository
     };
 
     private readonly string _configPath;
+    private AppConfig? _cached;
 
     public AppConfigRepository()
         : this(DefaultConfigPath()) { }
@@ -24,22 +25,24 @@ public sealed class AppConfigRepository : IAppConfigRepository
 
     public AppConfig Load()
     {
+        if (_cached is not null) return _cached;
         if (!File.Exists(_configPath))
-            return new AppConfig();
-
+            return _cached = new AppConfig();
         var json = File.ReadAllText(_configPath);
-        return JsonSerializer.Deserialize<AppConfig>(json, JsonOptions) ?? new AppConfig();
+        return _cached = JsonSerializer.Deserialize<AppConfig>(json, JsonOptions) ?? new AppConfig();
     }
 
     public void Save(AppConfig config)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(_configPath)!);
         File.WriteAllText(_configPath, JsonSerializer.Serialize(config, JsonOptions));
+        _cached = config;
     }
 
     private static string DefaultConfigPath() =>
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "PdfExtractToSkill",
+            "Pdf2ClaudeSkill",
+            "Setting",
             "config.json");
 }

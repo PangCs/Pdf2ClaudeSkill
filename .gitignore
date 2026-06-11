@@ -19,6 +19,13 @@ obj/
 # MSIX packaging output
 AppPackages/
 
+# Inno Setup installer output
+installer-output/
+
+# Code-signing artifacts — never commit
+*.pfx
+*.cer
+
 # Claude Code
 .claude/
 
