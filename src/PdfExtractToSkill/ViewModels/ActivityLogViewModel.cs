@@ -5,7 +5,7 @@ using PdfExtractToSkill.Application.Interfaces;
 
 namespace PdfExtractToSkill.ViewModels;
 
-public sealed partial class ActivityLogViewModel : ObservableObject
+public sealed partial class ActivityLogViewModel : ObservableObject, IDisposable
 {
     private readonly IActivityLog _log;
 
@@ -29,4 +29,6 @@ public sealed partial class ActivityLogViewModel : ObservableObject
     {
         System.Windows.Application.Current.Dispatcher.Invoke(() => Entries.Add(entry));
     }
+
+    public void Dispose() => _log.EntryAdded -= OnEntryAdded;
 }
