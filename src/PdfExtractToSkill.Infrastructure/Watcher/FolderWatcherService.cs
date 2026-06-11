@@ -1,3 +1,4 @@
+using PdfExtractToSkill.Application;
 using PdfExtractToSkill.Application.Interfaces;
 
 namespace PdfExtractToSkill.Infrastructure.Watcher;
@@ -5,16 +6,20 @@ namespace PdfExtractToSkill.Infrastructure.Watcher;
 public sealed class FolderWatcherService : IFolderWatcherService, IDisposable
 {
     private readonly TimeSpan _debounce;
+    private readonly IActivityLog? _log;
     private FileSystemWatcher? _watcher;
     private readonly Dictionary<string, Timer> _timers = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _lock = new();
 
     public event EventHandler<string>? PdfDetected;
 
-    public FolderWatcherService() : this(TimeSpan.FromMilliseconds(500)) { }
+    public FolderWatcherService(IActivityLog log) : this(log, TimeSpan.FromMilliseconds(500)) { }
 
-    internal FolderWatcherService(TimeSpan debounce)
+    internal FolderWatcherService(TimeSpan debounce) : this(null, debounce) { }
+
+    private FolderWatcherService(IActivityLog? log, TimeSpan debounce)
     {
+        _log = log;
         _debounce = debounce;
     }
 
@@ -75,6 +80,7 @@ public sealed class FolderWatcherService : IFolderWatcherService, IDisposable
                 _timers.Remove(path);
             }
         }
+        _log?.Append($"PDF detected: {path}");
         PdfDetected?.Invoke(this, path);
     }
 }

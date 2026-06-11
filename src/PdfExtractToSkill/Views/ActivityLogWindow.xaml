@@ -1,0 +1,40 @@
+<Window x:Class="PdfExtractToSkill.Views.ActivityLogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Activity Log" Width="700" Height="420"
+        MinWidth="480" MinHeight="250"
+        WindowStartupLocation="CenterScreen">
+    <DockPanel Margin="12">
+
+        <Border DockPanel.Dock="Top" Background="#F0F0F0" CornerRadius="4" Padding="8,6" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Watching:" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                <TextBlock Text="{Binding WatchedPath}" VerticalAlignment="Center"
+                           FontFamily="Consolas" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+        </Border>
+
+        <ListBox x:Name="LogList"
+                 ItemsSource="{Binding Entries}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 FontFamily="Consolas" FontSize="12"
+                 BorderThickness="1" BorderBrush="#CCCCCC">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="4,2"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock>
+                        <Run Text="{Binding Timestamp, StringFormat='[{0:HH:mm:ss}] '}" Foreground="Gray"/>
+                        <Run Text="{Binding Message}"/>
+                    </TextBlock>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+    </DockPanel>
+</Window>

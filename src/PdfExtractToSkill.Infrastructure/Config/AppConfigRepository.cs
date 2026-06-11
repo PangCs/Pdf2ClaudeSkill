@@ -40,6 +40,7 @@ public sealed class AppConfigRepository : IAppConfigRepository
     private static string DefaultConfigPath() =>
         Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "PdfExtractToSkill",
+            "Pdf2ClaudeSkill",
+            "Setting",
             "config.json");
 }
