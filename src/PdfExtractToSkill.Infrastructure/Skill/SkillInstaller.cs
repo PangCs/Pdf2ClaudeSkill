@@ -25,15 +25,14 @@ public sealed class SkillInstaller : ISkillInstaller
             BuildSkillMd(definition));
 
         File.WriteAllText(
-            ConfigPath(definition.Name),
-            Path.GetDirectoryName(definition.OutputFilePath) ?? string.Empty);
+            Path.Combine(skillDir, "content.md"),
+            definition.OutputFilePath);
     }
 
     public bool Exists(string skillName) =>
         File.Exists(Path.Combine(SkillDir(skillName), "SKILL.md"));
 
     private string SkillDir(string name) => Path.Combine(_skillsRoot, name);
-    private string ConfigPath(string name) => Path.Combine(_skillsRoot, $"{name}-config");
 
     private static string DefaultSkillsRoot() =>
         Path.Combine(
@@ -43,34 +42,33 @@ public sealed class SkillInstaller : ISkillInstaller
     private static string BuildSkillMd(SkillDefinition def) => $"""
         ---
         name: {def.Name}
-        description: Answer questions about {def.Description} from the extracted document. Cite the section and page number for every answer. Say "I don't know" if the information is absent.
+        description: Answer questions about {def.Description}.
         ---
 
-        # {def.Name}
+        ## Behavior
 
-        **Source document:** {def.SourceFileName}
-        **Reference file:** `{def.OutputFilePath}`
+        When answering any question:
 
-        ## Lookup Workflow
+        1. Read `content.md` in the same directory as this skill to get the document path
+        2. Read the document at that path
+        3. Locate the section heading(s) relevant to the question
+        4. Identify the page from the nearest `<!-- Page N of M -->` marker above the content
+        5. End every answer with a rigid citation block — no exceptions:
 
-        When answering a question:
+           > **Page:** N | **Section:** heading title
 
-        1. Read the reference file at `{def.OutputFilePath}`
-        2. Find the section heading(s) relevant to the question
-        3. Note the page from the nearest `<!-- Page N of M -->` marker above the content
-        4. Return the exact answer from the document with the citation: **Section:** `<heading>` | **Page:** N
-        5. If the information is not present anywhere in the document, respond exactly:
+           If the answer spans multiple pages or sections, cite ALL of them:
+
+           > **Page:** 3–4 | **Section:** 2.1 Specifications, 2.2 Tolerances
+
+        6. If the information is not present anywhere in the document, respond exactly:
+
            > I don't know — this information is not in the document.
 
-        **Strict rules — never violate:**
+        **Never violate — ever:**
         - Do not estimate, assume, approximate, extrapolate, or paraphrase
         - Do not round or modify values to match nearby content
         - Do not infer an answer from related sections; only cite what is explicitly stated
-
-        ## Reference
-
-        | Source document | Skill name | Reference file |
-        |-----------------|------------|----------------|
-        | {def.SourceFileName} | {def.Name} | `{def.OutputFilePath}` |
+        - Do not omit the citation block, even for partial answers
         """;
 }

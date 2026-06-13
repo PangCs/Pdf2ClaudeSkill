@@ -58,21 +58,21 @@ public class SkillInstallerTests : IDisposable
     }
 
     [Fact]
-    public void Install_SkillMdContainsOutputFilePath()
+    public void Install_SkillMdDoesNotContainOutputFilePath()
     {
         Make().Install(Sample());
 
         var content = File.ReadAllText(Path.Combine(_root, "my-skill", "SKILL.md"));
-        Assert.Contains(@"C:\output\my-skill\Rorze_EFEM.md", content);
+        Assert.DoesNotContain(@"C:\output\my-skill\Rorze_EFEM.md", content);
     }
 
     [Fact]
-    public void Install_SkillMdContainsSourceFileName()
+    public void Install_SkillMdDoesNotContainSourceFileName()
     {
         Make().Install(Sample());
 
         var content = File.ReadAllText(Path.Combine(_root, "my-skill", "SKILL.md"));
-        Assert.Contains("Rorze_EFEM.pdf", content);
+        Assert.DoesNotContain("Rorze_EFEM.pdf", content);
     }
 
     [Fact]
@@ -95,20 +95,79 @@ public class SkillInstallerTests : IDisposable
     }
 
     [Fact]
-    public void Install_WritesConfigFileNextToSkillsRoot()
+    public void Install_SkillMdEnforcesCitationBlock()
     {
         Make().Install(Sample());
 
-        Assert.True(File.Exists(Path.Combine(_root, "my-skill-config")));
+        var content = File.ReadAllText(Path.Combine(_root, "my-skill", "SKILL.md"));
+        Assert.Contains("> **Page:**", content);
+        Assert.Contains("**Section:**", content);
     }
 
     [Fact]
-    public void Install_ConfigFileContainsOutputFolder()
+    public void Install_SkillMdEnforcesMultiSectionCitation()
     {
         Make().Install(Sample());
 
-        var config = File.ReadAllText(Path.Combine(_root, "my-skill-config"));
-        Assert.Contains(@"C:\output\my-skill", config);
+        var content = File.ReadAllText(Path.Combine(_root, "my-skill", "SKILL.md"));
+        Assert.Contains("cite ALL", content);
+    }
+
+    [Fact]
+    public void Install_SkillMdEnforcesNoCitationOmission()
+    {
+        Make().Install(Sample());
+
+        var content = File.ReadAllText(Path.Combine(_root, "my-skill", "SKILL.md"));
+        Assert.Contains("Do not omit the citation block", content);
+    }
+
+    [Fact]
+    public void Install_SkillMdBodyIsIdenticalForDifferentDocuments()
+    {
+        var installer = Make();
+        installer.Install(Sample("skill-a") with
+        {
+            Description = "spec A",
+            OutputFilePath = @"C:\docs\spec-a.md",
+            SourceFileName = "spec-a.pdf"
+        });
+        installer.Install(Sample("skill-b") with
+        {
+            Description = "spec B",
+            OutputFilePath = @"C:\docs\spec-b.md",
+            SourceFileName = "spec-b.pdf"
+        });
+
+        var bodyA = ExtractBody(File.ReadAllText(Path.Combine(_root, "skill-a", "SKILL.md")));
+        var bodyB = ExtractBody(File.ReadAllText(Path.Combine(_root, "skill-b", "SKILL.md")));
+
+        Assert.Equal(bodyA, bodyB);
+    }
+
+    [Fact]
+    public void Install_WritesContentMdInsideSkillDirectory()
+    {
+        Make().Install(Sample());
+
+        Assert.True(File.Exists(Path.Combine(_root, "my-skill", "content.md")));
+    }
+
+    [Fact]
+    public void Install_ContentMdContainsOutputFilePath()
+    {
+        Make().Install(Sample());
+
+        var content = File.ReadAllText(Path.Combine(_root, "my-skill", "content.md"));
+        Assert.Contains(@"C:\output\my-skill\Rorze_EFEM.md", content);
+    }
+
+    [Fact]
+    public void Install_DoesNotWriteLegacyConfigSidecar()
+    {
+        Make().Install(Sample());
+
+        Assert.False(File.Exists(Path.Combine(_root, "my-skill-config")));
     }
 
     [Fact]
@@ -148,5 +207,19 @@ public class SkillInstallerTests : IDisposable
         installer.Install(Sample("skill-a"));
 
         Assert.False(installer.Exists("skill-b"));
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private static string ExtractBody(string skillMd)
+    {
+        // Strip YAML frontmatter (everything up to and including the closing ---)
+        var lines = skillMd.Split('\n');
+        for (var i = 1; i < lines.Length; i++)
+        {
+            if (lines[i].TrimEnd() == "---")
+                return string.Join('\n', lines.Skip(i + 1));
+        }
+        return skillMd;
     }
 }
