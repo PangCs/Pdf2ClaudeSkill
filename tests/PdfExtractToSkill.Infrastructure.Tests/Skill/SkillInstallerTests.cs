@@ -146,20 +146,20 @@ public class SkillInstallerTests : IDisposable
     }
 
     [Fact]
-    public void Install_WritesContentMdInsideSkillDirectory()
+    public void Install_WritesSourcePathMdInsideSkillDirectory()
     {
         Make().Install(Sample());
 
-        Assert.True(File.Exists(Path.Combine(_root, "my-skill", "content.md")));
+        Assert.True(File.Exists(Path.Combine(_root, "my-skill", "source-path.md")));
     }
 
     [Fact]
-    public void Install_ContentMdContainsOutputFilePath()
+    public void Install_SourcePathMdContainsExactOutputFilePath()
     {
         Make().Install(Sample());
 
-        var content = File.ReadAllText(Path.Combine(_root, "my-skill", "content.md"));
-        Assert.Contains(@"C:\output\my-skill\Rorze_EFEM.md", content);
+        var actual = File.ReadAllText(Path.Combine(_root, "my-skill", "source-path.md"));
+        Assert.Equal(@"C:\output\my-skill\Rorze_EFEM.md", actual);
     }
 
     [Fact]
@@ -209,17 +209,29 @@ public class SkillInstallerTests : IDisposable
         Assert.False(installer.Exists("skill-b"));
     }
 
+    [Fact]
+    public void Exists_ReturnsFalse_WhenSourcePathMdMissing()
+    {
+        var installer = Make();
+        installer.Install(Sample());
+        File.Delete(Path.Combine(_root, "my-skill", "source-path.md"));
+
+        Assert.False(installer.Exists("my-skill"));
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private static string ExtractBody(string skillMd)
     {
-        // Strip YAML frontmatter (everything up to and including the closing ---)
-        var lines = skillMd.Split('\n');
+        // Strip YAML frontmatter; normalize line endings so cross-platform
+        // comparisons are consistent regardless of WriteAllText behaviour.
+        var normalized = skillMd.Replace("\r\n", "\n").Replace("\r", "\n");
+        var lines = normalized.Split('\n');
         for (var i = 1; i < lines.Length; i++)
         {
             if (lines[i].TrimEnd() == "---")
                 return string.Join('\n', lines.Skip(i + 1));
         }
-        return skillMd;
+        return normalized;
     }
 }

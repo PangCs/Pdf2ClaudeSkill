@@ -25,12 +25,16 @@ public sealed class SkillInstaller : ISkillInstaller
             BuildSkillMd(definition));
 
         File.WriteAllText(
-            Path.Combine(skillDir, "content.md"),
+            Path.Combine(skillDir, "source-path.md"),
             definition.OutputFilePath);
     }
 
-    public bool Exists(string skillName) =>
-        File.Exists(Path.Combine(SkillDir(skillName), "SKILL.md"));
+    public bool Exists(string skillName)
+    {
+        var dir = SkillDir(skillName);
+        return File.Exists(Path.Combine(dir, "SKILL.md")) &&
+               File.Exists(Path.Combine(dir, "source-path.md"));
+    }
 
     private string SkillDir(string name) => Path.Combine(_skillsRoot, name);
 
@@ -49,7 +53,7 @@ public sealed class SkillInstaller : ISkillInstaller
 
         When answering any question:
 
-        1. Read `content.md` in the same directory as this skill to get the document path
+        1. Read `source-path.md` in the same directory as this skill to get the document path
         2. Read the document at that path
         3. Locate the section heading(s) relevant to the question
         4. Identify the page from the nearest `<!-- Page N of M -->` marker above the content
