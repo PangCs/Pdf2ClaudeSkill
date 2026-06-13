@@ -219,6 +219,42 @@ public class SkillInstallerTests : IDisposable
         Assert.False(installer.Exists("my-skill"));
     }
 
+    // ── Template loading ─────────────────────────────────────────────────────
+
+    [Fact]
+    public void Install_UsesBundledTemplateByDefault()
+    {
+        Make().Install(Sample());
+
+        var content = File.ReadAllText(Path.Combine(_root, "my-skill", "SKILL.md"));
+        Assert.Contains("Do not estimate", content);
+        Assert.Contains("> **Page:**", content);
+    }
+
+    [Fact]
+    public void Install_CustomTemplateOverrideIsUsedWhenProvided()
+    {
+        var templatePath = Path.Combine(_root, "custom-template.md");
+        File.WriteAllText(templatePath, "name: {{name}}\ndesc: {{description}}");
+
+        new SkillInstaller(_root, templatePath).Install(Sample());
+
+        var content = File.ReadAllText(Path.Combine(_root, "my-skill", "SKILL.md"));
+        Assert.Equal("name: my-skill\ndesc: the Rorze EFEM communication spec", content);
+    }
+
+    [Fact]
+    public void Install_OverrideTemplateTakesPrecedenceOverBundled()
+    {
+        var overridePath = Path.Combine(_root, "override.md");
+        File.WriteAllText(overridePath, "OVERRIDE:{{name}}");
+
+        new SkillInstaller(_root, overridePath).Install(Sample());
+
+        var content = File.ReadAllText(Path.Combine(_root, "my-skill", "SKILL.md"));
+        Assert.StartsWith("OVERRIDE:", content);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private static string ExtractBody(string skillMd)

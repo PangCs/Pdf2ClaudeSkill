@@ -1,3 +1,4 @@
+using System.Reflection;
 using PdfExtractToSkill.Application;
 using PdfExtractToSkill.Application.Interfaces;
 
@@ -6,13 +7,15 @@ namespace PdfExtractToSkill.Infrastructure.Skill;
 public sealed class SkillInstaller : ISkillInstaller
 {
     private readonly string _skillsRoot;
+    private readonly string? _templatePathOverride;
 
     public SkillInstaller()
         : this(DefaultSkillsRoot()) { }
 
-    internal SkillInstaller(string skillsRoot)
+    internal SkillInstaller(string skillsRoot, string? templatePathOverride = null)
     {
         _skillsRoot = skillsRoot;
+        _templatePathOverride = templatePathOverride;
     }
 
     public void Install(SkillDefinition definition)
@@ -22,7 +25,7 @@ public sealed class SkillInstaller : ISkillInstaller
 
         File.WriteAllText(
             Path.Combine(skillDir, "SKILL.md"),
-            BuildSkillMd(definition));
+            RenderTemplate(definition));
 
         File.WriteAllText(
             Path.Combine(skillDir, "source-path.md"),
@@ -43,36 +46,42 @@ public sealed class SkillInstaller : ISkillInstaller
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             ".claude", "skills");
 
-    private static string BuildSkillMd(SkillDefinition def) => $"""
-        ---
-        name: {def.Name}
-        description: Answer questions about {def.Description}.
-        ---
+    private static string UserOverridePath() =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "PdfExtractToSkill", "skill-template.md");
 
-        ## Behavior
+    private string RenderTemplate(SkillDefinition def)
+    {
+        var template = LoadTemplate();
+        return template
+            .Replace("{{name}}", def.Name)
+            .Replace("{{description}}", def.Description);
+    }
 
-        When answering any question:
+    private string LoadTemplate()
+    {
+        if (_templatePathOverride is not null)
+            return File.ReadAllText(_templatePathOverride);
 
-        1. Read `source-path.md` in the same directory as this skill to get the document path
-        2. Read the document at that path
-        3. Locate the section heading(s) relevant to the question
-        4. Identify the page from the nearest `<!-- Page N of M -->` marker above the content
-        5. End every answer with a rigid citation block — no exceptions:
+        var userOverride = UserOverridePath();
+        if (File.Exists(userOverride))
+            return File.ReadAllText(userOverride);
 
-           > **Page:** N | **Section:** heading title
+        return LoadEmbeddedTemplate();
+    }
 
-           If the answer spans multiple pages or sections, cite ALL of them:
+    private static string LoadEmbeddedTemplate()
+    {
+        var assembly = typeof(SkillInstaller).Assembly;
+        using var stream = assembly.GetManifestResourceStream(
+            "PdfExtractToSkill.Infrastructure.Skill.skill-template.md");
 
-           > **Page:** 3–4 | **Section:** 2.1 Specifications, 2.2 Tolerances
+        if (stream is null)
+            throw new InvalidOperationException(
+                "Bundled skill-template.md not found. The Infrastructure assembly may be corrupt.");
 
-        6. If the information is not present anywhere in the document, respond exactly:
-
-           > I don't know — this information is not in the document.
-
-        **Never violate — ever:**
-        - Do not estimate, assume, approximate, extrapolate, or paraphrase
-        - Do not round or modify values to match nearby content
-        - Do not infer an answer from related sections; only cite what is explicitly stated
-        - Do not omit the citation block, even for partial answers
-        """;
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
 }
