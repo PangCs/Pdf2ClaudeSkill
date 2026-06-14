@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <EmbeddedResource Include="Skill\skill-template.md" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PdfExtractToSkill.Application\PdfExtractToSkill.Application.csproj" />
   </ItemGroup>
 
