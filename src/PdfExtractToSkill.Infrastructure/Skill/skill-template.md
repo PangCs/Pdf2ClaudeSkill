@@ -7,7 +7,9 @@ description: Answer questions about {{description}}.
 
 When answering any question:
 
-1. Read `source-path.md` in the same directory as this skill to get the document path
+1. Read `source-path.md` in the same directory as this skill to get the document path.
+   If the file cannot be read, respond exactly:
+   > I cannot answer — source-path.md is missing or unreadable.
 2. Read the document at that path
 3. Locate the section heading(s) relevant to the question
 4. Identify the page from the nearest `<!-- Page N of M -->` marker above the content

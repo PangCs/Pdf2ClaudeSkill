@@ -219,6 +219,16 @@ public class SkillInstallerTests : IDisposable
         Assert.False(installer.Exists("my-skill"));
     }
 
+    [Fact]
+    public void Exists_ReturnsFalse_WhenSkillMdMissing()
+    {
+        var installer = Make();
+        installer.Install(Sample());
+        File.Delete(Path.Combine(_root, "my-skill", "SKILL.md"));
+
+        Assert.False(installer.Exists("my-skill"));
+    }
+
     // ── Template loading ─────────────────────────────────────────────────────
 
     [Fact]
@@ -268,6 +278,8 @@ public class SkillInstallerTests : IDisposable
             if (lines[i].TrimEnd() == "---")
                 return string.Join('\n', lines.Skip(i + 1));
         }
-        return normalized;
+        throw new InvalidOperationException(
+            "SKILL.md has no closing YAML frontmatter delimiter (---). " +
+            "The template may be malformed.");
     }
 }
